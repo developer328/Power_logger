@@ -18,7 +18,7 @@
 - OLED 128x64 I2c module
 - INA219 I2C module
 - 1x 10k resistor
-- Button
+- Push Button
 - 1x 100k resistor
 - 1x 25k resistor
 - 1x 18650 LI-ON battery 3.7V
