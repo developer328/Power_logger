@@ -103,6 +103,10 @@ void setup() {
     }
   }
 
+  char tmp_buf[] = "########### New ###########";
+
+  sd_print(tmp_buf, tmp_buf, tmp_buf);
+
   delay(500);
 
   u8x8.clear();
@@ -140,23 +144,7 @@ void loop() {
     dtostrf(power_mwh, 6, 2, mwh_tmp);       
     dtostrf(full_t, 6, 2, time_m_tmp);
 
-    File voltage = SD.open("voltage.txt", FILE_WRITE);
-    if(voltage){
-      voltage.println(v_tmp);
-      voltage.close();
-    }
-    
-    File current = SD.open("current.txt", FILE_WRITE);    
-    if(current){
-      current.println(ma_tmp);
-      current.close();
-    }
-    
-    File minutes = SD.open("minutes.txt", FILE_WRITE);
-    if(minutes){
-      minutes.println(time_m_tmp);
-      minutes.close();
-    }  
+    sd_print(v_tmp, ma_tmp, time_m_tmp);
 
     sprintf(v_tmp, "%s V", v_tmp);//11 char   
     sprintf(ma_tmp, "%s mA", ma_tmp);//11 char  
@@ -182,4 +170,24 @@ void loop() {
 void isr1(void){
   save_pwr = !save_pwr; 
   delayMicroseconds(500); 
+}
+
+void sd_print(char* v, char* ma, char* mins){
+    File voltage = SD.open("voltage.txt", FILE_WRITE);
+    if(voltage){
+      voltage.println(v);
+      voltage.close();
+    }
+    
+    File current = SD.open("current.txt", FILE_WRITE);    
+    if(current){
+      current.println(ma);
+      current.close();
+    }
+    
+    File minutes = SD.open("minutes.txt", FILE_WRITE);
+    if(minutes){
+      minutes.println(mins);
+      minutes.close();
+    }  
 }
