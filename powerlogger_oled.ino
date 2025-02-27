@@ -1,7 +1,7 @@
 /*
  * 24-FEB-2025
  * Power Logger
- * V, mA, mW, mWh, mAh, h
+ * V, mA, mWh, h
  */
 
 #include <SPI.h>
@@ -21,6 +21,7 @@ Adafruit_INA219 ina219;
 U8X8_SH1106_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE);
 
 unsigned long Time = 0;
+unsigned long Time_offset = 0;
 
 bool save_pwr = false;
 
@@ -30,6 +31,7 @@ float current_mA = 0;
 float power_mW = 0;
 float load_v = 0;
 float Time_min = 0;
+float full_t = 0;
 float power_mwh = 0;    
 
 char v_tmp[12];
@@ -39,19 +41,19 @@ char time_m_tmp[14];
 
 void setup() { 
 
-  pinMode(isr_pin, INPUT);
+  pinMode(isr_pin, INPUT); 
 
   detachInterrupt(digitalPinToInterrupt(isr_pin));
 
   if(!u8x8.begin()){
-    pinMode(13, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
     while(!digitalRead(isr_pin)){
-      digitalWrite(13, HIGH);
+      digitalWrite(LED_BUILTIN, HIGH);
       delay(100);
-      digitalWrite(13, LOW);
+      digitalWrite(LED_BUILTIN, LOW);
       delay(100);
     }    
-    pinMode(13, DEFAULT);
+    pinMode(LED_BUILTIN, INPUT);
   }else{
     u8x8.setPowerSave(0);
     u8x8.clear();
@@ -67,14 +69,17 @@ void setup() {
     u8x8.drawString(0,3,"Press the button");
     u8x8.drawString(2,4,"to skip this");
     u8x8.drawString(5,5,"step.");
-    pinMode(13, OUTPUT);
+    cli();
+//    pinMode(4, OUTPUT);     
     while(!digitalRead(isr_pin)){
-      digitalWrite(13, HIGH);
-      delay(200);
-      digitalWrite(13, LOW);
-      delay(200);
-    }   
-    pinMode(13, DEFAULT);
+      ;
+//      digitalWrite(4, HIGH);
+//      delay(200);
+//      digitalWrite(4, LOW);
+//      delay(200);
+    }  
+    sei(); 
+    pinMode(4, INPUT);
     u8x8.clear();
 
     u8x8.setFont(u8x8_font_8x13_1x2_r);
@@ -83,43 +88,56 @@ void setup() {
   
   if(!ina219.begin()){
     u8x8.clear();
-    pinMode(13, OUTPUT); 
+//    pinMode(4, OUTPUT); 
     u8x8.setFont(u8x8_font_8x13_1x2_r);
     u8x8.drawString(1,2,"INA219 ERROR!");
     u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
     u8x8.drawString(1,4,"Please reset!");
+    cli();
     while(1){
-      digitalWrite(13, HIGH);
-      delay(100);
-      digitalWrite(13, LOW);
-      delay(100);   
+      ;
+//      digitalWrite(4, HIGH);
+//      delay(100);
+//      digitalWrite(4, LOW);
+//      delay(100);   
     }
   }
 
   delay(500);
-  
+
+  u8x8.setFont(u8x8_font_8x13_1x2_r);
+  u8x8.drawString(1,10,"Ready?");
+  cli();
+  while(!digitalRead(isr_pin)){
+    ;
+  }
+  sei();
+
+  delay(70);
   attachInterrupt(digitalPinToInterrupt(isr_pin), isr1, RISING); 
   delay(70); 
   save_pwr = false;
 
   u8x8.clear();
+  Time_offset = millis();
 }
 
 void loop() {
 
-  if((millis()-Time) >= INTERVAL){
+  if(((millis()-Time_offset)-Time) >= INTERVAL){
     shuntvoltage = ina219.getShuntVoltage_mV();
     busvoltage = ina219.getBusVoltage_V();
     current_mA = ina219.getCurrent_mA();
     power_mW = ina219.getPower_mW();
-    load_v = busvoltage + (shuntvoltage / 1000);
-    Time_min = ((float)Time/1000)/60;
-    power_mwh = power_mW*(Time_min/60);    
+    load_v = busvoltage + (shuntvoltage / 1000.0);
+    Time_min = ((float)(millis()-Time)/1000.0)/60.0;
+    power_mwh += power_mW*(Time_min/60);    
+    full_t += Time_min;
 
     dtostrf(load_v, 6, 3, v_tmp);    
     dtostrf(current_mA, 6, 2, ma_tmp);        
     dtostrf(power_mwh, 6, 2, mwh_tmp);       
-    dtostrf(Time_min, 6, 2, time_m_tmp);
+    dtostrf(full_t, 6, 2, time_m_tmp);
 
     File voltage = SD.open("voltage.txt", FILE_WRITE);
     if(voltage){
@@ -139,10 +157,10 @@ void loop() {
       minutes.close();
     }  
 
-    sprintf(v_tmp, "%s V", v_tmp);//11    
-    sprintf(ma_tmp, "%s mA", ma_tmp);//11        
-    sprintf(mwh_tmp, "%s mWh", mwh_tmp);//12        
-    sprintf(time_m_tmp, "%s min", time_m_tmp);//12
+    sprintf(v_tmp, "%s V", v_tmp);//11 char   
+    sprintf(ma_tmp, "%s mA", ma_tmp);//11 char  
+    sprintf(mwh_tmp, "%s mWh", mwh_tmp);//12 char    
+    sprintf(time_m_tmp, "%s min", time_m_tmp);//12 char
 
     if(!save_pwr){
       u8x8.setPowerSave(0);
@@ -157,6 +175,7 @@ void loop() {
     }
     Time = millis();
   }
+  Time_offset = 0;
 }
 
 void isr1(void){
