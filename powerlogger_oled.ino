@@ -105,6 +105,7 @@ void setup() {
 
   delay(500);
 
+  u8x8.clear();
   u8x8.setFont(u8x8_font_8x13_1x2_r);
   u8x8.drawString(1,10,"Ready?");
   cli();
