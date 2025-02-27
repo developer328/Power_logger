@@ -1,4 +1,4 @@
-#A Arduino Power Logger
+# Arduino Power Logger
 
 **Time is measured in minutes, current in milliamps (mA), and voltage in volts (V). Consider this for calculations.**
 
