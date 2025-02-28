@@ -4,6 +4,10 @@
 
 ![image_front](Power_logger.jpg)
 
+
+**Battery capacity measurement chart:**
+![bat_test_image](Battery_test.png)
+
 **Used libraries:**
 
 - SPI.h

@@ -136,7 +136,7 @@ void loop() {
     power_mW = ina219.getPower_mW();
     load_v = busvoltage + (shuntvoltage / 1000.0);
     Time_min = ((float)(millis()-Time)/1000.0)/60.0;
-    power_mwh += power_mW*(Time_min/60);    
+    power_mwh += load_v * current_mA / 3600;;    
     full_t += Time_min;
 
     dtostrf(load_v, 6, 3, v_tmp);    
