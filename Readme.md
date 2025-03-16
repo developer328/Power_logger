@@ -26,7 +26,7 @@
 
 - Arduino pro mini
 - SPI SD reader
-- OLED 128x64 I2c module
+- OLED 128x64 I2c SH1106 module
 - INA219 I2C module
 - 1x 10k resistor
 - Push Button
