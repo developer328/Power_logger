@@ -8,6 +8,11 @@
 **Battery capacity measurement chart:**
 ![bat_test_image](Battery_test.png)
 
+
+**Schematic:**
+![schematic_kicad](Schematic.png)
+
+
 **Used libraries:**
 
 - SPI.h
